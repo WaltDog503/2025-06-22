@@ -2,6 +2,8 @@
 
 #include <cstring>
 
+using namespace std;
+
 namespace
 {
 char* copyString(const char* src)
@@ -13,9 +15,9 @@ char* copyString(const char* src)
     return empty;
   }
 
-  const std::size_t len = std::strlen(src);
+  const size_t len = strlen(src);
   char* dst = new char[len + 1];
-  std::strcpy(dst, src);
+  strcpy(dst, src);
   return dst;
 }
 }  // namespace

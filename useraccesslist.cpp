@@ -3,6 +3,8 @@
 #include <cstring>
 #include <iostream>
 
+using namespace std;
+
 namespace
 {
 char* copyString(const char* src)
@@ -14,9 +16,9 @@ char* copyString(const char* src)
     return empty;
   }
 
-  const std::size_t len = std::strlen(src);
+  const size_t len = strlen(src);
   char* dst = new char[len + 1];
-  std::strcpy(dst, src);
+  strcpy(dst, src);
   return dst;
 }
 }  // namespace
@@ -46,7 +48,7 @@ void UserAccessList::addUser(const char* systemName, const char* user)
     return;
   }
 
-  if (std::strcmp(systemName, mSystem) != 0)
+  if (strcmp(systemName, mSystem) != 0)
   {
     return;
   }
@@ -57,7 +59,7 @@ void UserAccessList::addUser(const char* systemName, const char* user)
   UserNode* tail = nullptr;
   while (curr != nullptr)
   {
-    if (std::strcmp(curr->data->getUser(), user) == 0)
+    if (strcmp(curr->data->getUser(), user) == 0)
     {
       curr->data->incr();
       return;
@@ -79,7 +81,7 @@ void UserAccessList::addUser(const char* systemName, const char* user)
 
 void UserAccessList::printReport()
 {
-  std::cout << "System: " << mSystem << '\n';
+  cout << "System: " << mSystem << '\n';
 
   UserNode* top = nullptr;
   UserNode* second = nullptr;
@@ -101,35 +103,35 @@ void UserAccessList::printReport()
     curr = curr->next;
   }
 
-  std::cout << "  Top: ";
+  cout << "  Top: ";
   if (top == nullptr)
   {
-    std::cout << "(none)\n";
+    cout << "(none)\n";
   }
   else
   {
-    std::cout << top->data->getUser() << '\n';
+    cout << top->data->getUser() << '\n';
   }
 
-  std::cout << "  Second: ";
+  cout << "  Second: ";
   if (second == nullptr)
   {
-    std::cout << "(none)\n";
+    cout << "(none)\n";
   }
   else
   {
-    std::cout << second->data->getUser() << '\n';
+    cout << second->data->getUser() << '\n';
   }
 
-  std::cout << "  All:\n";
+  cout << "  All:\n";
   curr = mHead;
   while (curr != nullptr)
   {
     const int count = curr->data->getCount();
     const int percent = (mTotalAccesses == 0) ? 0 : (count * 100) / mTotalAccesses;
-    std::cout << "    " << curr->data->getUser() << " " << count << " (" << percent
-              << "%)\n";
+    cout << "    " << curr->data->getUser() << " " << count << " (" << percent
+         << "%)\n";
     curr = curr->next;
   }
-  std::cout << '\n';
+  cout << '\n';
 }
