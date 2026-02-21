@@ -1,0 +1,94 @@
+CS162 Security Assignment - Design Document
+===========================================
+
+1) Program Description
+----------------------
+This program reads a systems file and an access-log file, then counts how many
+times each user accessed each system. It prints a report for every system that
+includes the top user, second-place user(s), and all user counts with
+percentages.
+
+
+2) Inputs and Data Types
+------------------------
+A. Command-line inputs
+1. accessDataFile
+   - Data type: const char* (filename/path)
+   - Description: Name of file containing access entries:
+       "<system>, <user>"
+2. systemsFile
+   - Data type: const char* (filename/path)
+   - Description: Name of file containing number of systems and system names
+
+B. File-based input values
+1. numSystems
+   - Data type: int
+   - Description: Number of systems listed in systemsFile
+2. sys (system name per line)
+   - Data type: char array (temporary read buffer) / dynamically allocated
+                char* inside UserAccessList
+   - Description: Name of one ship system
+3. numEntries
+   - Data type: int
+   - Description: Number of access records in accessDataFile
+4. who (user name per access record)
+   - Data type: char array (temporary read buffer) / dynamically allocated
+                char* inside UserAccess
+   - Description: Person making an access request
+
+C. Dynamic data structures used
+1. allLists
+   - Data type: UserAccessList**
+   - Description: Dynamic array of pointers, one UserAccessList per system
+2. Linked list nodes in each UserAccessList
+   - Data type: UserNode* (head pointer and next pointers)
+   - Description: Tracks all users who accessed that system
+3. User data in each node
+   - Data type: UserAccess* (contains char* name and int count)
+   - Description: Stores one user and that user's access count
+
+
+3) Outputs and Data Types
+-------------------------
+All output is printed to the console (screen).
+
+Per-system report output:
+1. System line
+   - Example: "System: propulsion"
+   - Data type printed: text (char/string)
+2. Top line
+   - Example: "  Top: Angelica Milliken"
+   - Data type printed: text (char/string)
+3. Second line
+   - Example: "  Second: Issac Rangel, Ramiro Thomson"
+   - Data type printed: text (char/string list)
+4. All section line
+   - Example: "  All:"
+   - Data type printed: text
+5. Per-user detail line
+   - Example: "    Angelica Milliken 32 (25%)"
+   - Data types printed:
+       user name -> text (char/string)
+       count     -> int
+       percent   -> int
+
+
+4) Calculations / Formulas
+--------------------------
+1. Increment user count for an access
+   - Formula: userCount = userCount + 1
+
+2. Increment total system accesses
+   - Formula: mTotalAccesses = mTotalAccesses + 1
+
+3. Percentage for each user in report
+   - Formula:
+       percent = (userCount * 100) / mTotalAccesses
+   - Notes:
+       - Uses integer arithmetic (truncates decimal)
+       - If mTotalAccesses == 0, percent is set to 0
+
+4. Top and second-place selection
+   - Track highest count (topCount) and second-highest distinct count
+     (secondCount) while traversing linked list.
+   - If multiple users have secondCount, print all names comma-separated.
