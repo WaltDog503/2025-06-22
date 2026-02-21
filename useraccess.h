@@ -4,19 +4,19 @@
 class UserAccess
 {
 private:
-  char* mUser;
-  int mCount;
+   char* mUser;
+   int mCount;
 
 public:
-  UserAccess(const char* user);
-  UserAccess(const UserAccess& other);
-  ~UserAccess();
+   UserAccess(const char* user);
+   UserAccess(const UserAccess& other);
+   ~UserAccess();
 
-  UserAccess& operator=(const UserAccess& other);
+   UserAccess& operator=(const UserAccess& other);
 
-  const char* getUser() const;
-  int getCount() const;
-  void incr();
+   const char* getUser() const;
+   int getCount() const;
+   void incr();
 };
 
 #endif

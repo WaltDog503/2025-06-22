@@ -6,19 +6,19 @@
 class UserAccessList
 {
 private:
-  char* mSystem;
-  int mTotalAccesses;
-  UserNode* mHead;
+   char* mSystem;
+   int mTotalAccesses;
+   UserNode* mHead;
 
 public:
-  UserAccessList(const char* systemName);
-  ~UserAccessList();
+   UserAccessList(const char* systemName);
+   ~UserAccessList();
 
-  UserAccessList(const UserAccessList& other) = delete;
-  UserAccessList& operator=(const UserAccessList& other) = delete;
+   UserAccessList(const UserAccessList& other) = delete;
+   UserAccessList& operator=(const UserAccessList& other) = delete;
 
-  void addUser(const char* systemName, const char* user);
-  void printReport();
+   void addUser(const char* systemName, const char* user);
+   void printReport();
 };
 
 #endif

@@ -6,53 +6,55 @@ using namespace std;
 
 UserAccess::UserAccess(const char* user)
 {
-  const char* source = (user == nullptr) ? "" : user;
-  const int len = static_cast<int>(strlen(source));
+   const char* source = (user == nullptr) ? "" : user;
+   const int len = static_cast<int>(strlen(source));
 
-  mUser = new char[len + 1];
-  strcpy(mUser, source);
-  mCount = 1;
+   mUser = new char[len + 1];
+   strcpy(mUser, source);
+   mCount = 1;
 }
 
 UserAccess::UserAccess(const UserAccess& other)
 {
-  const int len = static_cast<int>(strlen(other.mUser));
-  mUser = new char[len + 1];
-  strcpy(mUser, other.mUser);
-  mCount = other.mCount;
+   const int len = static_cast<int>(strlen(other.mUser));
+   mUser = new char[len + 1];
+   strcpy(mUser, other.mUser);
+   mCount = other.mCount;
 }
 
 UserAccess::~UserAccess()
 {
-  delete[] mUser;
+   delete[] mUser;
 }
 
 UserAccess& UserAccess::operator=(const UserAccess& other)
 {
-  if (this != &other)
-  {
-    delete[] mUser;
+   int len = 0;
 
-    const int len = static_cast<int>(strlen(other.mUser));
-    mUser = new char[len + 1];
-    strcpy(mUser, other.mUser);
-    mCount = other.mCount;
-  }
+   if (this != &other)
+   {
+      delete[] mUser;
 
-  return *this;
+      len = static_cast<int>(strlen(other.mUser));
+      mUser = new char[len + 1];
+      strcpy(mUser, other.mUser);
+      mCount = other.mCount;
+   }
+
+   return *this;
 }
 
 const char* UserAccess::getUser() const
 {
-  return mUser;
+   return mUser;
 }
 
 int UserAccess::getCount() const
 {
-  return mCount;
+   return mCount;
 }
 
 void UserAccess::incr()
 {
-  ++mCount;
+   mCount = mCount + 1;
 }
