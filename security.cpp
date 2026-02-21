@@ -1,208 +1,341 @@
+/******************************************************************************
+# Author:           Student
+# Assignment:       Security
+# Date:             2026-02-21
+# Description:      Reads system and access files, tracks per-system user
+#                   counts, then prints reports.
+# Input:            Two command-line filenames (access file and systems file).
+# Output:           One report per system printed to console.
+# Sources:          Assignment specifications.
+#******************************************************************************/
+
 #include <cctype>
 #include <cstring>
 #include <fstream>
 #include <iostream>
-#include <string>
 
 #include "useraccesslist.h"
 
 using namespace std;
 
-namespace
-{
-char* copyCString(const string& source)
-{
-  char* result = new char[source.size() + 1];
-  strcpy(result, source.c_str());
-  return result;
-}
-}  // namespace
+const int MAX_LINE_LEN = 256;
 
+void trimWhitespace(char* text);
+char* copyCString(const char* source);
+int countSystems(const char* systemsFileName);
+bool loadSystemNames(const char* systemsFileName, char** systemNames,
+                     int systemCount);
+bool parseAccessLine(const char* line, char* systemName, char* userName);
+
+// Name:   main(int argc, char* argv[])
+// Desc:   Runs the security access reporting program.
+// Input:  Command-line filenames for access and systems data.
+// Output: Prints summary reports.
+// Return: 0 on success, 1 on file/argument errors
 int main(int argc, char* argv[])
 {
-  if (argc != 3)
-  {
-    cout << "Usage: " << argv[0] << " <access-file> <systems-file>\n";
-    return 1;
-  }
+   int status = 0;
+   bool canRun = true;
+   ifstream accessFile;
+   int systemCount = 0;
+   char** systemNames = nullptr;
+   UserAccessList** systems = nullptr;
+   int i = 0;
+   char line[MAX_LINE_LEN];
+   char parsedSystem[MAX_LINE_LEN];
+   char parsedUser[MAX_LINE_LEN];
+   bool parsedOk = false;
 
-  ifstream accessFile(argv[1]);
-  if (!accessFile)
-  {
-    cout << "Error: unable to open access file.\n";
-    return 1;
-  }
+   if (argc != 3)
+   {
+      cout << "Usage: " << argv[0] << " <access-file> <systems-file>\n";
+      status = 1;
+      canRun = false;
+   }
 
-  ifstream systemsFile(argv[2]);
-  if (!systemsFile)
-  {
-    cout << "Error: unable to open systems file.\n";
-    return 1;
-  }
+   if (canRun)
+   {
+      accessFile.open(argv[1]);
+      if (!accessFile.is_open())
+      {
+         cout << "Error: unable to open access file.\n";
+         status = 1;
+         canRun = false;
+      }
+   }
 
-  string line;
-  int systemCount = 0;
-  while (getline(systemsFile, line))
-  {
-    string system = line;
-    size_t start = 0;
-    while (start < system.size() &&
-           isspace(static_cast<unsigned char>(system[start])) != 0)
-    {
-      ++start;
-    }
+   if (canRun)
+   {
+      systemCount = countSystems(argv[2]);
+      if (systemCount < 0)
+      {
+         cout << "Error: unable to open systems file.\n";
+         status = 1;
+         canRun = false;
+      }
+      else if (systemCount == 0)
+      {
+         canRun = false;
+      }
+   }
 
-    size_t end = system.size();
-    while (end > start &&
-           isspace(static_cast<unsigned char>(system[end - 1])) != 0)
-    {
-      --end;
-    }
+   if (canRun)
+   {
+      systemNames = new char*[systemCount];
+      for (i = 0; i < systemCount; ++i)
+      {
+         systemNames[i] = nullptr;
+      }
 
-    system = system.substr(start, end - start);
-    if (!system.empty())
-    {
-      ++systemCount;
-    }
-  }
+      canRun = loadSystemNames(argv[2], systemNames, systemCount);
+      if (!canRun)
+      {
+         cout << "Error: unable to read systems file.\n";
+         status = 1;
+      }
+   }
 
-  if (systemCount == 0)
-  {
-    return 0;
-  }
+   if (canRun)
+   {
+      systems = new UserAccessList*[systemCount];
+      for (i = 0; i < systemCount; ++i)
+      {
+         systems[i] = new UserAccessList(systemNames[i]);
+      }
+   }
 
-  systemsFile.close();
-  systemsFile.open(argv[2]);
-  if (!systemsFile)
-  {
-    cout << "Error: unable to reopen systems file.\n";
-    return 1;
-  }
+   if (canRun)
+   {
+      while (accessFile.getline(line, MAX_LINE_LEN))
+      {
+         trimWhitespace(line);
+         parsedOk = parseAccessLine(line, parsedSystem, parsedUser);
+         if (parsedOk)
+         {
+            for (i = 0; i < systemCount; ++i)
+            {
+               systems[i]->addUser(parsedSystem, parsedUser);
+            }
+         }
+      }
+   }
 
-  char** systemNames = new char*[systemCount];
-  for (int i = 0; i < systemCount; ++i)
-  {
-    systemNames[i] = nullptr;
-  }
+   if (canRun)
+   {
+      for (i = 0; i < systemCount; ++i)
+      {
+         systems[i]->printReport();
+      }
+   }
 
-  int index = 0;
-  while (index < systemCount && getline(systemsFile, line))
-  {
-    string system = line;
-    size_t start = 0;
-    while (start < system.size() &&
-           isspace(static_cast<unsigned char>(system[start])) != 0)
-    {
-      ++start;
-    }
+   if (systems != nullptr)
+   {
+      for (i = 0; i < systemCount; ++i)
+      {
+         delete systems[i];
+      }
+      delete[] systems;
+   }
 
-    size_t end = system.size();
-    while (end > start &&
-           isspace(static_cast<unsigned char>(system[end - 1])) != 0)
-    {
-      --end;
-    }
+   if (systemNames != nullptr)
+   {
+      for (i = 0; i < systemCount; ++i)
+      {
+         delete[] systemNames[i];
+      }
+      delete[] systemNames;
+   }
 
-    system = system.substr(start, end - start);
-    if (system.empty())
-    {
-      continue;
-    }
-    systemNames[index] = copyCString(system);
-    ++index;
-  }
+   if (accessFile.is_open())
+   {
+      accessFile.close();
+   }
 
-  UserAccessList** systems = new UserAccessList*[systemCount];
-  for (int i = 0; i < systemCount; ++i)
-  {
-    systems[i] = new UserAccessList(systemNames[i]);
-  }
+   return status;
+}
 
-  while (getline(accessFile, line))
-  {
-    string entry = line;
-    size_t start = 0;
-    while (start < entry.size() &&
-           isspace(static_cast<unsigned char>(entry[start])) != 0)
-    {
-      ++start;
-    }
+// Name:   trimWhitespace(char* text)
+// Desc:   Removes leading and trailing whitespace from a C-string in place.
+// Input:  text - C-string to modify
+// Output: Modified text content
+// Return: None
+void trimWhitespace(char* text)
+{
+   int length = 0;
+   int start = 0;
+   int end = 0;
+   int readIndex = 0;
+   int writeIndex = 0;
 
-    size_t end = entry.size();
-    while (end > start &&
-           isspace(static_cast<unsigned char>(entry[end - 1])) != 0)
-    {
-      --end;
-    }
+   if (text != nullptr)
+   {
+      length = static_cast<int>(strlen(text));
 
-    entry = entry.substr(start, end - start);
-    if (entry.empty())
-    {
-      continue;
-    }
+      while (start < length &&
+             isspace(static_cast<unsigned char>(text[start])) != 0)
+      {
+         ++start;
+      }
 
-    const size_t commaPos = entry.find(',');
-    if (commaPos == string::npos)
-    {
-      continue;
-    }
+      end = length - 1;
+      while (end >= start &&
+             isspace(static_cast<unsigned char>(text[end])) != 0)
+      {
+         --end;
+      }
 
-    string system = entry.substr(0, commaPos);
-    start = 0;
-    while (start < system.size() &&
-           isspace(static_cast<unsigned char>(system[start])) != 0)
-    {
-      ++start;
-    }
+      readIndex = start;
+      while (readIndex <= end)
+      {
+         text[writeIndex] = text[readIndex];
+         ++writeIndex;
+         ++readIndex;
+      }
+      text[writeIndex] = '\0';
+   }
+}
 
-    end = system.size();
-    while (end > start &&
-           isspace(static_cast<unsigned char>(system[end - 1])) != 0)
-    {
-      --end;
-    }
+// Name:   copyCString(const char* source)
+// Desc:   Allocates and copies a C-string.
+// Input:  source - C-string to copy
+// Output: None
+// Return: Heap-allocated C-string
+char* copyCString(const char* source)
+{
+   char* copy = nullptr;
+   int length = 0;
 
-    system = system.substr(start, end - start);
+   if (source != nullptr)
+   {
+      length = static_cast<int>(strlen(source));
+      copy = new char[length + 1];
+      strcpy(copy, source);
+   }
 
-    string user = entry.substr(commaPos + 1);
-    start = 0;
-    while (start < user.size() &&
-           isspace(static_cast<unsigned char>(user[start])) != 0)
-    {
-      ++start;
-    }
+   return copy;
+}
 
-    end = user.size();
-    while (end > start &&
-           isspace(static_cast<unsigned char>(user[end - 1])) != 0)
-    {
-      --end;
-    }
+// Name:   countSystems(const char* systemsFileName)
+// Desc:   Counts non-empty system lines in the systems file.
+// Input:  systemsFileName - systems filename
+// Output: None
+// Return: Number of valid systems, or -1 if file cannot be opened
+int countSystems(const char* systemsFileName)
+{
+   ifstream systemsFile;
+   int systemCount = -1;
+   char line[MAX_LINE_LEN];
 
-    user = user.substr(start, end - start);
-    if (system.empty() || user.empty())
-    {
-      continue;
-    }
+   systemsFile.open(systemsFileName);
+   if (systemsFile.is_open())
+   {
+      systemCount = 0;
+      while (systemsFile.getline(line, MAX_LINE_LEN))
+      {
+         trimWhitespace(line);
+         if (strlen(line) > 0)
+         {
+            systemCount = systemCount + 1;
+         }
+      }
+      systemsFile.close();
+   }
 
-    for (int i = 0; i < systemCount; ++i)
-    {
-      systems[i]->addUser(system.c_str(), user.c_str());
-    }
-  }
+   return systemCount;
+}
 
-  for (int i = 0; i < systemCount; ++i)
-  {
-    systems[i]->printReport();
-  }
+// Name:   loadSystemNames(...)
+// Desc:   Loads non-empty trimmed system names into a dynamic array.
+// Input:  systemsFileName, systemNames destination array, systemCount
+// Output: Populated systemNames array
+// Return: true if all names were loaded, false otherwise
+bool loadSystemNames(const char* systemsFileName, char** systemNames,
+                     int systemCount)
+{
+   ifstream systemsFile;
+   bool loadedOk = false;
+   char line[MAX_LINE_LEN];
+   int index = 0;
 
-  for (int i = 0; i < systemCount; ++i)
-  {
-    delete systems[i];
-    delete[] systemNames[i];
-  }
-  delete[] systems;
-  delete[] systemNames;
+   systemsFile.open(systemsFileName);
+   if (systemsFile.is_open())
+   {
+      loadedOk = true;
+      while (systemsFile.getline(line, MAX_LINE_LEN) && index < systemCount)
+      {
+         trimWhitespace(line);
+         if (strlen(line) > 0)
+         {
+            systemNames[index] = copyCString(line);
+            if (systemNames[index] != nullptr)
+            {
+               index = index + 1;
+            }
+            else
+            {
+               loadedOk = false;
+            }
+         }
+      }
 
-  return 0;
+      if (index != systemCount)
+      {
+         loadedOk = false;
+      }
+
+      systemsFile.close();
+   }
+
+   return loadedOk;
+}
+
+// Name:   parseAccessLine(...)
+// Desc:   Parses "system, user" into separate output C-strings.
+// Input:  line text and output buffers
+// Output: systemName and userName filled when parse succeeds
+// Return: true if parsed valid system/user names, false otherwise
+bool parseAccessLine(const char* line, char* systemName, char* userName)
+{
+   bool parsedOk = false;
+   const char* comma = nullptr;
+   int systemLen = 0;
+   int i = 0;
+
+   if (line != nullptr && systemName != nullptr && userName != nullptr)
+   {
+      systemName[0] = '\0';
+      userName[0] = '\0';
+
+      if (strlen(line) > 0)
+      {
+         comma = strchr(line, ',');
+         if (comma != nullptr)
+         {
+            systemLen = static_cast<int>(comma - line);
+            if (systemLen > MAX_LINE_LEN - 1)
+            {
+               systemLen = MAX_LINE_LEN - 1;
+            }
+
+            for (i = 0; i < systemLen; ++i)
+            {
+               systemName[i] = line[i];
+            }
+            systemName[systemLen] = '\0';
+
+            strncpy(userName, comma + 1, MAX_LINE_LEN - 1);
+            userName[MAX_LINE_LEN - 1] = '\0';
+
+            trimWhitespace(systemName);
+            trimWhitespace(userName);
+
+            if (strlen(systemName) > 0 && strlen(userName) > 0)
+            {
+               parsedOk = true;
+            }
+         }
+      }
+   }
+
+   return parsedOk;
 }

@@ -1,3 +1,14 @@
+/******************************************************************************
+# Author:           Student
+# Assignment:       Security
+# Date:             2026-02-21
+# Description:      Implements the UserAccessList linked-list class for one
+#                   ship system.
+# Input:            addUser() receives system/user C-strings.
+# Output:           printReport() prints a report for one system.
+# Sources:          Assignment specifications.
+#******************************************************************************/
+
 #include "useraccesslist.h"
 
 #include <cstring>
@@ -7,131 +18,195 @@ using namespace std;
 
 namespace
 {
+// Name:   copyString(const char* src)
+// Desc:   Allocates and copies a C-string; uses empty string for null source.
+// Input:  src - source C-string pointer
+// Output: None
+// Return: Heap-allocated C-string copy
 char* copyString(const char* src)
 {
-  if (src == nullptr)
-  {
-    char* empty = new char[1];
-    empty[0] = '\0';
-    return empty;
-  }
+   char* dst = nullptr;
+   size_t len = 0;
 
-  const size_t len = strlen(src);
-  char* dst = new char[len + 1];
-  strcpy(dst, src);
-  return dst;
+   if (src == nullptr)
+   {
+      dst = new char[1];
+      dst[0] = '\0';
+   }
+   else
+   {
+      len = strlen(src);
+      dst = new char[len + 1];
+      strcpy(dst, src);
+   }
+
+   return dst;
 }
 }  // namespace
 
+// Name:   UserAccessList(const char* systemName)
+// Desc:   Creates an empty user-access list for one system.
+// Input:  systemName - system name C-string
+// Output: None
+// Return: None
 UserAccessList::UserAccessList(const char* systemName)
-    : mSystem(copyString(systemName)), mTotalAccesses(0), mHead(nullptr)
 {
+   mSystem = copyString(systemName);
+   mTotalAccesses = 0;
+   mHead = nullptr;
 }
 
+// Name:   ~UserAccessList()
+// Desc:   Frees system name and all linked-list nodes.
+// Input:  None
+// Output: None
+// Return: None
 UserAccessList::~UserAccessList()
 {
-  delete[] mSystem;
+   UserNode* curr = nullptr;
+   UserNode* next = nullptr;
 
-  UserNode* curr = mHead;
-  while (curr != nullptr)
-  {
-    UserNode* next = curr->next;
-    delete curr;
-    curr = next;
-  }
+   delete[] mSystem;
+
+   curr = mHead;
+   while (curr != nullptr)
+   {
+      next = curr->next;
+      delete curr;
+      curr = next;
+   }
 }
 
+// Name:   addUser(const char* systemName, const char* user)
+// Desc:   Adds one access event for a user when system name matches.
+// Input:  systemName - requested system, user - user name
+// Output: None
+// Return: None
 void UserAccessList::addUser(const char* systemName, const char* user)
 {
-  if (systemName == nullptr || user == nullptr)
-  {
-    return;
-  }
+   bool validData = false;
+   bool matchingSystem = false;
+   bool foundUser = false;
+   UserNode* curr = nullptr;
+   UserNode* tail = nullptr;
+   UserNode* newNode = nullptr;
 
-  if (strcmp(systemName, mSystem) != 0)
-  {
-    return;
-  }
+   if (systemName != nullptr && user != nullptr)
+   {
+      validData = true;
+   }
 
-  ++mTotalAccesses;
+   if (validData)
+   {
+      if (strcmp(systemName, mSystem) == 0)
+      {
+         matchingSystem = true;
+      }
+   }
 
-  UserNode* curr = mHead;
-  UserNode* tail = nullptr;
-  while (curr != nullptr)
-  {
-    if (strcmp(curr->data->getUser(), user) == 0)
-    {
-      curr->data->incr();
-      return;
-    }
-    tail = curr;
-    curr = curr->next;
-  }
+   if (matchingSystem)
+   {
+      mTotalAccesses = mTotalAccesses + 1;
 
-  UserNode* newNode = new UserNode(new UserAccess(user));
-  if (tail == nullptr)
-  {
-    mHead = newNode;
-  }
-  else
-  {
-    tail->next = newNode;
-  }
+      curr = mHead;
+      while (curr != nullptr && !foundUser)
+      {
+         if (strcmp(curr->data->getUser(), user) == 0)
+         {
+            curr->data->incr();
+            foundUser = true;
+         }
+         else
+         {
+            tail = curr;
+            curr = curr->next;
+         }
+      }
+
+      if (!foundUser)
+      {
+         newNode = new UserNode(new UserAccess(user));
+         if (tail == nullptr)
+         {
+            mHead = newNode;
+         }
+         else
+         {
+            tail->next = newNode;
+         }
+      }
+   }
 }
 
+// Name:   printReport()
+// Desc:   Prints this system's top users and all counts with percentages.
+// Input:  None
+// Output: Report text printed to console
+// Return: None
 void UserAccessList::printReport()
 {
-  cout << "System: " << mSystem << '\n';
+   UserNode* top = nullptr;
+   UserNode* second = nullptr;
+   UserNode* curr = nullptr;
+   int count = 0;
+   int percent = 0;
 
-  UserNode* top = nullptr;
-  UserNode* second = nullptr;
+   cout << "System: " << mSystem << '\n';
 
-  UserNode* curr = mHead;
-  while (curr != nullptr)
-  {
-    const int count = curr->data->getCount();
-    if (top == nullptr || count > top->data->getCount())
-    {
-      second = top;
-      top = curr;
-    }
-    else if (curr != top &&
-             (second == nullptr || count > second->data->getCount()))
-    {
-      second = curr;
-    }
-    curr = curr->next;
-  }
+   curr = mHead;
+   while (curr != nullptr)
+   {
+      count = curr->data->getCount();
+      if (top == nullptr || count > top->data->getCount())
+      {
+         second = top;
+         top = curr;
+      }
+      else if (curr != top &&
+               (second == nullptr || count > second->data->getCount()))
+      {
+         second = curr;
+      }
+      curr = curr->next;
+   }
 
-  cout << "  Top: ";
-  if (top == nullptr)
-  {
-    cout << "(none)\n";
-  }
-  else
-  {
-    cout << top->data->getUser() << '\n';
-  }
+   cout << "  Top: ";
+   if (top == nullptr)
+   {
+      cout << "(none)\n";
+   }
+   else
+   {
+      cout << top->data->getUser() << '\n';
+   }
 
-  cout << "  Second: ";
-  if (second == nullptr)
-  {
-    cout << "(none)\n";
-  }
-  else
-  {
-    cout << second->data->getUser() << '\n';
-  }
+   cout << "  Second: ";
+   if (second == nullptr)
+   {
+      cout << "(none)\n";
+   }
+   else
+   {
+      cout << second->data->getUser() << '\n';
+   }
 
-  cout << "  All:\n";
-  curr = mHead;
-  while (curr != nullptr)
-  {
-    const int count = curr->data->getCount();
-    const int percent = (mTotalAccesses == 0) ? 0 : (count * 100) / mTotalAccesses;
-    cout << "    " << curr->data->getUser() << " " << count << " (" << percent
-         << "%)\n";
-    curr = curr->next;
-  }
-  cout << '\n';
+   cout << "  All:\n";
+   curr = mHead;
+   while (curr != nullptr)
+   {
+      count = curr->data->getCount();
+      if (mTotalAccesses == 0)
+      {
+         percent = 0;
+      }
+      else
+      {
+         percent = (count * 100) / mTotalAccesses;
+      }
+
+      cout << "    " << curr->data->getUser() << " " << count
+           << " (" << percent << "%)\n";
+      curr = curr->next;
+   }
+   cout << '\n';
 }
