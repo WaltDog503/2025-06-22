@@ -1,4 +1,4 @@
-/******************************************************************************
+/*****************************************************************************
 # Author:           Student
 # Assignment:       Security
 # Date:             2026-02-21
@@ -6,7 +6,7 @@
 # Input:            Constructor accepts a user name C-string.
 # Output:           Getter methods provide user name and count.
 # Sources:          Assignment specifications.
-#******************************************************************************/
+#*****************************************************************************/
 
 #ifndef USERACCESS_H
 #define USERACCESS_H

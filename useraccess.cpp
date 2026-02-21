@@ -1,4 +1,4 @@
-/******************************************************************************
+/*****************************************************************************
 # Author:           Student
 # Assignment:       Security
 # Date:             2026-02-21
@@ -7,7 +7,7 @@
 # Input:            Constructor takes a user name as C-string.
 # Output:           Getter methods return user name and count.
 # Sources:          Assignment specifications.
-#******************************************************************************/
+#*****************************************************************************/
 
 #include "useraccess.h"
 

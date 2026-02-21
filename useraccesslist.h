@@ -1,4 +1,4 @@
-/******************************************************************************
+/*****************************************************************************
 # Author:           Student
 # Assignment:       Security
 # Date:             2026-02-21
@@ -6,7 +6,7 @@
 # Input:            Constructor accepts a system name C-string.
 # Output:           addUser updates counts, printReport prints report text.
 # Sources:          Assignment specifications.
-#******************************************************************************/
+#*****************************************************************************/
 
 #ifndef USERACCESSLIST_H
 #define USERACCESSLIST_H

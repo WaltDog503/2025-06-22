@@ -1,4 +1,4 @@
-/******************************************************************************
+/*****************************************************************************
 # Author:           Student
 # Assignment:       Security
 # Date:             2026-02-21
@@ -7,7 +7,7 @@
 # Input:            addUser() receives system/user C-strings.
 # Output:           printReport() prints a report for one system.
 # Sources:          Assignment specifications.
-#******************************************************************************/
+#*****************************************************************************/
 
 #include "useraccesslist.h"
 
