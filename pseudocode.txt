@@ -1,0 +1,207 @@
+Security Program Pseudocode
+===========================
+
+MAIN PROGRAM (security.cpp)
+---------------------------
+START main(argc, argv)
+
+IF argc is not 3 THEN
+    OUTPUT "Usage: <program> <access log file> <systems file>"
+    RETURN
+END IF
+
+SET accessDataFile = argv[1]
+SET systemsFile = argv[2]
+
+OPEN systemsIn using systemsFile
+READ numSystems
+CONSUME newline
+
+ALLOCATE dynamic array allLists of size numSystems
+FOR i = 0 to numSystems - 1
+    READ one system name into sys
+    CREATE new UserAccessList(sys)
+    STORE pointer in allLists[i]
+END FOR
+CLOSE systemsIn
+
+OPEN accessDataIn using accessDataFile
+READ numEntries
+CONSUME newline
+
+FOR i = 0 to numEntries - 1
+    READ system name up to comma into sys
+    CONSUME one space
+    READ person name into who
+
+    FOR j = 0 to numSystems - 1
+        CALL allLists[j]->addUser(sys, who)
+    END FOR
+END FOR
+CLOSE accessDataIn
+
+FOR j = 0 to numSystems - 1
+    CALL allLists[j]->printReport()
+END FOR
+
+FOR j = 0 to numSystems - 1
+    DELETE allLists[j]
+END FOR
+DELETE [] allLists
+
+RETURN
+END main
+
+
+CLASS UserAccess
+----------------
+DATA MEMBERS
+    mUser  : dynamically allocated char array
+    mCount : int
+
+CONSTRUCTOR UserAccess(user)
+    ALLOCATE mUser to exact size of user + null terminator
+    COPY user text into mUser
+    SET mCount = 1
+END CONSTRUCTOR
+
+COPY CONSTRUCTOR UserAccess(other)
+    ALLOCATE mUser to exact size of other.mUser + null terminator
+    COPY other.mUser into mUser
+    SET mCount = other.mCount
+END COPY CONSTRUCTOR
+
+ASSIGNMENT OPERATOR =(other)
+    IF this is not other THEN
+        DELETE existing mUser
+        ALLOCATE new mUser to exact size of other.mUser + null terminator
+        COPY other.mUser into mUser
+        SET mCount = other.mCount
+    END IF
+    RETURN this object
+END ASSIGNMENT
+
+DESTRUCTOR
+    DELETE [] mUser
+END DESTRUCTOR
+
+METHOD getUser()
+    RETURN mUser
+END METHOD
+
+METHOD getCount()
+    RETURN mCount
+END METHOD
+
+METHOD incr()
+    INCREMENT mCount by 1
+END METHOD
+
+
+STRUCT UserNode
+---------------
+DATA MEMBERS
+    data : UserAccess pointer
+    next : UserNode pointer
+
+CONSTRUCTOR UserNode(userData)
+    SET data = userData
+    SET next = null
+END CONSTRUCTOR
+
+DESTRUCTOR
+    DELETE data
+END DESTRUCTOR
+
+
+CLASS UserAccessList
+--------------------
+DATA MEMBERS
+    mSystem        : dynamically allocated char array
+    mTotalAccesses : int
+    mHead          : UserNode pointer
+
+CONSTRUCTOR UserAccessList(systemName)
+    ALLOCATE mSystem to exact size of systemName + null terminator
+    COPY systemName into mSystem
+    SET mTotalAccesses = 0
+    SET mHead = null
+END CONSTRUCTOR
+
+DESTRUCTOR
+    SET current = mHead
+    WHILE current is not null
+        SET next = current->next
+        DELETE current
+        SET current = next
+    END WHILE
+    DELETE [] mSystem
+END DESTRUCTOR
+
+METHOD addUser(systemName, user)
+    IF systemName is null OR user is null THEN
+        DO NOTHING
+    ELSE IF systemName does not match mSystem THEN
+        DO NOTHING
+    ELSE
+        INCREMENT mTotalAccesses
+
+        SET current = mHead
+        SET tail = null
+        SET foundExistingUser = false
+
+        WHILE current is not null AND foundExistingUser is false
+            IF current->data->getUser() equals user THEN
+                CALL current->data->incr()
+                SET foundExistingUser = true
+            ELSE
+                SET tail = current
+                SET current = current->next
+            END IF
+        END WHILE
+
+        IF foundExistingUser is false THEN
+            CREATE new UserAccess(user)
+            CREATE new UserNode(pointer to new UserAccess)
+            IF mHead is null THEN
+                SET mHead = new node
+            ELSE
+                SET tail->next = new node
+            END IF
+        END IF
+    END IF
+END METHOD
+
+METHOD printReport()
+    SET topNode = null
+    SET topCount = -1
+    SET secondCount = -1
+
+    FOR each node current in linked list from mHead to null
+        SET count = current->data->getCount()
+        IF count > topCount THEN
+            SET secondCount = topCount
+            SET topCount = count
+            SET topNode = current
+        ELSE IF count < topCount AND count > secondCount THEN
+            SET secondCount = count
+        END IF
+    END FOR
+
+    OUTPUT "System: " + mSystem
+    OUTPUT "  Top: " + (top user name, or blank if none)
+
+    OUTPUT "  Second: " with all users whose count == secondCount
+        (comma-separated, in linked-list order)
+
+    OUTPUT "  All:"
+    FOR each node current in linked list
+        SET count = current->data->getCount()
+        IF mTotalAccesses is 0 THEN
+            SET percent = 0
+        ELSE
+            SET percent = (count * 100) / mTotalAccesses   // integer division
+        END IF
+        OUTPUT "    " + user + " " + count + " (" + percent + "%)"
+    END FOR
+END METHOD
