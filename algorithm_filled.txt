@@ -1,0 +1,265 @@
+cs162: Computer Science II
+Algorithm Design Document
+Programming Project: Security
+
+This text document is provided as a template for your Algorithm Design
+Document for the Security assignment. You need to copy the contents of this
+file into a Word or Google Docs document and then complete each of the
+sections. The reason that this needs to be a Word or Google Docs document is
+because one of the sections requires you to paste screenshots of your Zybooks
+completion statistics. After you have completed this document, save it as a
+PDF document and include the PDF document with your project submission on D2L.
+
+Planning your program before you start coding is part of the development
+process. In this document you will:
+
+- Paste a screenshot of your zyBooks Challenge and Participation %
+- Paste a screenshot of your assigned zyLabs completion: 22.9 and
+  22.10.
+- Write a detailed description of your program, at least two complete
+  sentences
+- Identify the program inputs and their data types
+- Identify the program outputs and their data types
+- Identify any calculations or formulas needed
+- Write the algorithmic steps as pseudocode
+
+1. zyBooks
+
+Add your zyBooks screenshots for the % and assigned zyLabs completions
+below. Required percentages: all assigned zyLabs, Challenge Activity with at
+least 70%, and Participation Activity with at least 80%. Challenge and
+Participation % screenshot:
+
+<paste Challenge & Participation screenshot here>
+
+Assigned zyLabs completion screenshot:
+
+<paste assigned zyLabs completion screenshot here for labs 22.9 and 22.10>
+
+2. Program Description
+
+In the box below, describe the purpose of the program. You must include a
+detailed description with at least two complete sentences. Program
+description:
+
+This program reads two files: one file that lists the systems on a ship and
+one file that lists access events in the form "system, user". It dynamically
+creates one UserAccessList per system, tracks each user's access count with a
+linked list, and prints a report for every system showing the top user, the
+second-highest user(s), and all user counts with integer percentages.
+
+3. Algorithmic Design
+
+Before you begin coding, you must first plan out the logic and think about
+what data you will use to test your program for correctness. All programmers
+plan before coding - this saves a lot of time and frustration! Use the steps
+below to identify the inputs and outputs, calculations, and steps needed to
+solve the problem.
+
+3a. Input Variables
+
+Identify and list all of the input variables and their data types. Include a
+variable name, data type, and description. Data types include string, integer,
+floating point, (single) character, and boolean. Data structures should be
+referenced by name, e.g. "array of integer" or "array of string".
+
+- argc: integer
+  - Number of command-line arguments.
+
+- argv: array of C-string pointers (char*[])
+  - Command-line argument values; argv[1] is access log filename,
+    argv[2] is systems filename.
+
+- accessDataFile: C-string pointer (const char*)
+  - Name/path of the access-log input file.
+
+- systemsFile: C-string pointer (const char*)
+  - Name/path of the systems input file.
+
+- numSystems: integer
+  - Number of systems read from systems file.
+
+- sys: character array / C-string (char[RDBUFSIZE] during file read)
+  - System name read from systems file or access file.
+
+- numEntries: integer
+  - Number of access log entries read from access file.
+
+- who: character array / C-string (char[RDBUFSIZE] during file read)
+  - User name read from access file.
+
+- allLists: dynamic array of UserAccessList pointers (UserAccessList**)
+  - One UserAccessList object pointer for each system.
+
+- mSystem: dynamic C-string pointer (char*)
+  - Stored system name in each UserAccessList object.
+
+- mTotalAccesses: integer
+  - Total number of accesses recorded for that system.
+
+- mHead: UserNode pointer
+  - Head pointer of linked list for one system's user counts.
+
+- UserNode::data: UserAccess pointer
+  - Pointer to per-user data (name + count).
+
+- UserNode::next: UserNode pointer
+  - Next node in the linked list.
+
+- UserAccess::mUser: dynamic C-string pointer (char*)
+  - User name for one linked-list entry.
+
+- UserAccess::mCount: integer
+  - Access count for that user in one system.
+
+3b. Output Variables
+
+Identify and list all of the output variables and their data types. Include a
+variable name, data type, and description. Data types include string, integer,
+floating point, (single) character, and boolean. Data structures should be
+referenced by name, e.g. "array of integer" or "array of string".
+
+All output is printed to the console:
+
+- usageMessage: string output
+  - Printed when command-line arguments are missing:
+    "Usage: <program> <access log file> <systems file>"
+
+- reportSystemName: string output
+  - Printed as "System: <systemName>".
+
+- reportTopUser: string output
+  - Printed as "  Top: <name>".
+
+- reportSecondUsers: string output
+  - Printed as "  Second: <name>" or multiple names separated by comma+space
+    for ties.
+
+- reportAllHeader: string output
+  - Printed as "  All:".
+
+- reportUserName: string output
+  - Printed in each detail line.
+
+- reportUserCount: integer output
+  - Printed in each detail line.
+
+- reportUserPercent: integer output
+  - Printed in each detail line as "(N%)".
+
+3c. Calculations
+
+What calculations do you need to do to transform inputs into outputs? List all
+formulas needed, if applicable. If there are no calculations needed, state
+there are no calculations for this algorithm. Formulae should reference the
+variable names from step a and step b as applicable.
+
+- Per-access system total increment:
+  mTotalAccesses = mTotalAccesses + 1
+
+- Per-user count increment for existing user:
+  mCount = mCount + 1
+
+- Percent for each user line in report:
+  reportUserPercent = (reportUserCount * 100) / mTotalAccesses
+
+- Safe zero-access case:
+  if mTotalAccesses == 0 then reportUserPercent = 0
+
+- Top and second logic:
+  track topCount and secondCount while traversing linked list
+  - if count > topCount: secondCount = topCount, topCount = count
+  - else if count < topCount and count > secondCount: secondCount = count
+  - any user with count == secondCount is printed in "Second" list
+
+3d. Logic
+
+Design the logic of your program using pseudocode (See note about pseudocode
+below). Here is where you would use conditionals, loops or functions (if
+applicable) and list the steps in transforming inputs into outputs. Walk
+through your logic steps with the test data from the assignment document.
+
+START main
+  IF argc != 3
+    print usage and stop
+  ENDIF
+
+  read systems file:
+    read numSystems
+    allocate allLists dynamic array of size numSystems
+    loop numSystems times:
+      read one system name
+      create UserAccessList for that name
+      store pointer in allLists
+
+  read access log file:
+    read numEntries
+    loop numEntries times:
+      parse one entry as sys and who
+      for each list in allLists:
+        call addUser(sys, who)
+
+  for each list in allLists:
+    call printReport()
+
+  cleanup:
+    delete each UserAccessList object
+    delete dynamic array allLists
+END main
+
+UserAccessList::addUser(sys, who)
+  if sys is null or who is null: do nothing
+  if sys does not match mSystem: do nothing
+  otherwise:
+    increment mTotalAccesses
+    traverse linked list to find user
+    if found:
+      increment that user's count
+    else:
+      create new UserAccess(who)
+      append new UserNode to end of linked list
+
+UserAccessList::printReport()
+  traverse linked list once to compute:
+    top user (highest count)
+    secondCount (highest distinct count less than top)
+  print:
+    System line
+    Top line
+    Second line (all users with count == secondCount, comma-separated)
+    All header
+    each user line with count and integer percent
+
+4. Pseudocode
+
+(This section just describes pseudocode and is for your information only. You
+don't need to include it in your algorithm.pdf document.)
+
+The design should be written using pseudocode. That is, semi-formal English
+statements that describe the algorithm. The purpose of using pseudocode is to
+allow a developer to express the essential aspects of a program or algorithm
+in a clear and unambiguous way without worrying about syntax or getting bogged
+down in implementation details. In general, pseudocode does not require
+specific syntax but needs to be clear enough to describe the algorithm. There
+are various forms of "official" pseudocode but most developers use something
+that feels intuitive. Using a very formal and strict pseudocode tends to
+defeat the purpose of using pseudocode.
+
+Here is an example of pseudocode for a small program to convert Celsius
+degrees to Farenheit.
+
+----
+
+prompt user to input Celcius degrees
+celDegrees = read user input
+
+while celDegrees is not valid, repeat the first two steps
+
+farDegrees = (celDegrees * 9/5) + 32
+
+output farDegrees to user
+
+prompt user to see if they want to do more calculations
+if "yes" then go back to the beginning, else exit
+
+----
