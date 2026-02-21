@@ -80,26 +80,47 @@ void UserAccessList::addUser(const char* systemName, const char* user)
 void UserAccessList::printReport()
 {
   UserNode* topNode = nullptr;
-  UserNode* secondNode = nullptr;
+  int topCount = -1;
+  int secondCount = -1;
 
   for (UserNode* current = mHead; current != nullptr; current = current->next)
   {
-    if (topNode == nullptr || current->data->getCount() > topNode->data->getCount())
+    const int count = current->data->getCount();
+
+    if (count > topCount)
     {
-      secondNode = topNode;
+      secondCount = topCount;
+      topCount = count;
       topNode = current;
     }
-    else if (secondNode == nullptr ||
-             current->data->getCount() > secondNode->data->getCount())
+    else if (count < topCount && count > secondCount)
     {
-      secondNode = current;
+      secondCount = count;
     }
   }
 
   std::cout << "System: " << mSystem << '\n';
   std::cout << "  Top: " << (topNode != nullptr ? topNode->data->getUser() : "") << '\n';
-  std::cout << "  Second: "
-            << (secondNode != nullptr ? secondNode->data->getUser() : "") << '\n';
+
+  std::cout << "  Second: ";
+  bool printedSecond = false;
+  if (secondCount >= 0)
+  {
+    for (UserNode* current = mHead; current != nullptr; current = current->next)
+    {
+      if (current->data->getCount() == secondCount)
+      {
+        if (printedSecond)
+        {
+          std::cout << ", ";
+        }
+        std::cout << current->data->getUser();
+        printedSecond = true;
+      }
+    }
+  }
+  std::cout << '\n';
+
   std::cout << "  All:" << '\n';
 
   for (UserNode* current = mHead; current != nullptr; current = current->next)
