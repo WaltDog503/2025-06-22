@@ -18,8 +18,14 @@ struct UserNode
    UserAccess* data;
    UserNode* next;
 
-   explicit UserNode(UserAccess* userData);
-   ~UserNode();
+   explicit UserNode(UserAccess* userData) : data(userData), next(nullptr)
+   {
+   }
+
+   ~UserNode()
+   {
+      delete data;
+   }
 
    UserNode(const UserNode& other) = delete;
    UserNode& operator=(const UserNode& other) = delete;

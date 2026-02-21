@@ -1,341 +1,94 @@
-/******************************************************************************
-# Author:           Student
-# Assignment:       Security
-# Date:             2026-02-21
-# Description:      Reads system and access files, tracks per-system user
-#                   counts, then prints reports.
-# Input:            Two command-line filenames (access file and systems file).
-# Output:           One report per system printed to console.
-# Sources:          Assignment specifications.
-#******************************************************************************/
-
-#include <cctype>
-#include <cstring>
-#include <fstream>
 #include <iostream>
-
+#include <fstream>
+#include <cstring>
+#include <cstdlib>
 #include "useraccesslist.h"
 
 using namespace std;
 
-const int MAX_LINE_LEN = 256;
+#define RDBUFSIZE 100
 
-void trimWhitespace(char* text);
-char* copyCString(const char* source);
-int countSystems(const char* systemsFileName);
-bool loadSystemNames(const char* systemsFileName, char** systemNames,
-                     int systemCount);
-bool parseAccessLine(const char* line, char* systemName, char* userName);
-
-// Name:   main(int argc, char* argv[])
-// Desc:   Runs the security access reporting program.
-// Input:  Command-line filenames for access and systems data.
-// Output: Prints summary reports.
-// Return: 0 on success, 1 on file/argument errors
-int main(int argc, char* argv[])
+int main(int argc,char* argv[])
 {
-   int status = 0;
-   bool canRun = true;
-   ifstream accessFile;
-   int systemCount = 0;
-   char** systemNames = nullptr;
-   UserAccessList** systems = nullptr;
-   int i = 0;
-   char line[MAX_LINE_LEN];
-   char parsedSystem[MAX_LINE_LEN];
-   char parsedUser[MAX_LINE_LEN];
-   bool parsedOk = false;
+    if (argc != 3) {
+	cout << "Usage: " << argv[0] << " <access log file> <systems file>" << endl;
+	return(0);
+    }
 
-   if (argc != 3)
-   {
-      cout << "Usage: " << argv[0] << " <access-file> <systems-file>\n";
-      status = 1;
-      canRun = false;
-   }
+    const char* accessDataFile = argv[1];
+    const char* systemsFile = argv[2];
 
-   if (canRun)
-   {
-      accessFile.open(argv[1]);
-      if (!accessFile.is_open())
-      {
-         cout << "Error: unable to open access file.\n";
-         status = 1;
-         canRun = false;
-      }
-   }
+    // This program doesn't assume a specific number of systems or the names
+    // of these systems. Instead, that data is provided in a data file. This
+    // code here reads the list of systems and create an array of
+    // UserAccessList objectsAccessTracker objects -- one per system.
+    //
+    // In order for this to work, you will need to create a class called
+    // "UserAccessList" and make sure that it has a constructor that takes in
+    // a char*.
+    ifstream systemsIn(systemsFile);
+    int numSystems;
+    systemsIn >> numSystems;
+    systemsIn.get();
+    UserAccessList** allLists = new UserAccessList*[numSystems];
+    for (int i=0;i<numSystems;i++)
+    {
+	char sys[RDBUFSIZE];
+	systemsIn.getline(sys,RDBUFSIZE);
+	allLists[i] = new UserAccessList(sys);
+    }
+    systemsIn.close();
 
-   if (canRun)
-   {
-      systemCount = countSystems(argv[2]);
-      if (systemCount < 0)
-      {
-         cout << "Error: unable to open systems file.\n";
-         status = 1;
-         canRun = false;
-      }
-      else if (systemCount == 0)
-      {
-         canRun = false;
-      }
-   }
+    // After reading in the systems, we will now read in all the access logs
+    // and insert these accesses into the UserAccessList that corresponds to
+    // the system being accessed. The first line of the logfile tells us how
+    // many entries are in that logfile. Each line of the logfile contains a
+    // system name and the person accessing it. These two values are separated
+    // by a comma. This code here will read the system name and person name
+    // then it will loop over all the UserAccessLists (in the array created
+    // above) and give each UserAccessList a chance to enter that data. A
+    // UserAccessList will only enter the data if it is the right one. That
+    // is, the system name matches the name in that log entry.
+    ifstream accessDataIn(accessDataFile);
+    int numEntries;
+    accessDataIn >> numEntries;
+    accessDataIn.get();
+    for (int i=0;i<numEntries;i++)
+    {
+	char sys[RDBUFSIZE];
+	char who[RDBUFSIZE];
 
-   if (canRun)
-   {
-      systemNames = new char*[systemCount];
-      for (i = 0; i < systemCount; ++i)
-      {
-         systemNames[i] = nullptr;
-      }
+	accessDataIn.getline(sys,RDBUFSIZE,',');
+	accessDataIn.get(); // eat the extra space
+	accessDataIn.getline(who,RDBUFSIZE);
 
-      canRun = loadSystemNames(argv[2], systemNames, systemCount);
-      if (!canRun)
-      {
-         cout << "Error: unable to read systems file.\n";
-         status = 1;
-      }
-   }
+	for (int j=0;j<numSystems;j++)
+	{
+	    allLists[j]->addUser(sys,who);
+	}
+    }
+    accessDataIn.close();
 
-   if (canRun)
-   {
-      systems = new UserAccessList*[systemCount];
-      for (i = 0; i < systemCount; ++i)
-      {
-         systems[i] = new UserAccessList(systemNames[i]);
-      }
-   }
+    // Now that all the data has been read in, it is time to ask each list to
+    // print a report. Make sure to study the example output files to
+    // understand the contents and format of the report.
+    for (int j=0;j<numSystems;j++)
+    {
+	allLists[j]->printReport();
+    }
 
-   if (canRun)
-   {
-      while (accessFile.getline(line, MAX_LINE_LEN))
-      {
-         trimWhitespace(line);
-         parsedOk = parseAccessLine(line, parsedSystem, parsedUser);
-         if (parsedOk)
-         {
-            for (i = 0; i < systemCount; ++i)
-            {
-               systems[i]->addUser(parsedSystem, parsedUser);
-            }
-         }
-      }
-   }
+    // The last step is to clean up memory to avoid memory leaks. We need to
+    // delete each of the UserAccessList objects that were created in the
+    // array above. Calling delete on each object will call that object's
+    // destructor. After all the objects have been deleted, we have to delete
+    // the array itself. Note that your UserAccessList class, which contains a
+    // linked list, will need to have a destructor that cleans up its own
+    // memory.
+    for (int j=0;j<numSystems;j++)
+    {
+	delete allLists[j];
+    }
+    delete [] allLists;
 
-   if (canRun)
-   {
-      for (i = 0; i < systemCount; ++i)
-      {
-         systems[i]->printReport();
-      }
-   }
-
-   if (systems != nullptr)
-   {
-      for (i = 0; i < systemCount; ++i)
-      {
-         delete systems[i];
-      }
-      delete[] systems;
-   }
-
-   if (systemNames != nullptr)
-   {
-      for (i = 0; i < systemCount; ++i)
-      {
-         delete[] systemNames[i];
-      }
-      delete[] systemNames;
-   }
-
-   if (accessFile.is_open())
-   {
-      accessFile.close();
-   }
-
-   return status;
-}
-
-// Name:   trimWhitespace(char* text)
-// Desc:   Removes leading and trailing whitespace from a C-string in place.
-// Input:  text - C-string to modify
-// Output: Modified text content
-// Return: None
-void trimWhitespace(char* text)
-{
-   int length = 0;
-   int start = 0;
-   int end = 0;
-   int readIndex = 0;
-   int writeIndex = 0;
-
-   if (text != nullptr)
-   {
-      length = static_cast<int>(strlen(text));
-
-      while (start < length &&
-             isspace(static_cast<unsigned char>(text[start])) != 0)
-      {
-         ++start;
-      }
-
-      end = length - 1;
-      while (end >= start &&
-             isspace(static_cast<unsigned char>(text[end])) != 0)
-      {
-         --end;
-      }
-
-      readIndex = start;
-      while (readIndex <= end)
-      {
-         text[writeIndex] = text[readIndex];
-         ++writeIndex;
-         ++readIndex;
-      }
-      text[writeIndex] = '\0';
-   }
-}
-
-// Name:   copyCString(const char* source)
-// Desc:   Allocates and copies a C-string.
-// Input:  source - C-string to copy
-// Output: None
-// Return: Heap-allocated C-string
-char* copyCString(const char* source)
-{
-   char* copy = nullptr;
-   int length = 0;
-
-   if (source != nullptr)
-   {
-      length = static_cast<int>(strlen(source));
-      copy = new char[length + 1];
-      strcpy(copy, source);
-   }
-
-   return copy;
-}
-
-// Name:   countSystems(const char* systemsFileName)
-// Desc:   Counts non-empty system lines in the systems file.
-// Input:  systemsFileName - systems filename
-// Output: None
-// Return: Number of valid systems, or -1 if file cannot be opened
-int countSystems(const char* systemsFileName)
-{
-   ifstream systemsFile;
-   int systemCount = -1;
-   char line[MAX_LINE_LEN];
-
-   systemsFile.open(systemsFileName);
-   if (systemsFile.is_open())
-   {
-      systemCount = 0;
-      while (systemsFile.getline(line, MAX_LINE_LEN))
-      {
-         trimWhitespace(line);
-         if (strlen(line) > 0)
-         {
-            systemCount = systemCount + 1;
-         }
-      }
-      systemsFile.close();
-   }
-
-   return systemCount;
-}
-
-// Name:   loadSystemNames(...)
-// Desc:   Loads non-empty trimmed system names into a dynamic array.
-// Input:  systemsFileName, systemNames destination array, systemCount
-// Output: Populated systemNames array
-// Return: true if all names were loaded, false otherwise
-bool loadSystemNames(const char* systemsFileName, char** systemNames,
-                     int systemCount)
-{
-   ifstream systemsFile;
-   bool loadedOk = false;
-   char line[MAX_LINE_LEN];
-   int index = 0;
-
-   systemsFile.open(systemsFileName);
-   if (systemsFile.is_open())
-   {
-      loadedOk = true;
-      while (systemsFile.getline(line, MAX_LINE_LEN) && index < systemCount)
-      {
-         trimWhitespace(line);
-         if (strlen(line) > 0)
-         {
-            systemNames[index] = copyCString(line);
-            if (systemNames[index] != nullptr)
-            {
-               index = index + 1;
-            }
-            else
-            {
-               loadedOk = false;
-            }
-         }
-      }
-
-      if (index != systemCount)
-      {
-         loadedOk = false;
-      }
-
-      systemsFile.close();
-   }
-
-   return loadedOk;
-}
-
-// Name:   parseAccessLine(...)
-// Desc:   Parses "system, user" into separate output C-strings.
-// Input:  line text and output buffers
-// Output: systemName and userName filled when parse succeeds
-// Return: true if parsed valid system/user names, false otherwise
-bool parseAccessLine(const char* line, char* systemName, char* userName)
-{
-   bool parsedOk = false;
-   const char* comma = nullptr;
-   int systemLen = 0;
-   int i = 0;
-
-   if (line != nullptr && systemName != nullptr && userName != nullptr)
-   {
-      systemName[0] = '\0';
-      userName[0] = '\0';
-
-      if (strlen(line) > 0)
-      {
-         comma = strchr(line, ',');
-         if (comma != nullptr)
-         {
-            systemLen = static_cast<int>(comma - line);
-            if (systemLen > MAX_LINE_LEN - 1)
-            {
-               systemLen = MAX_LINE_LEN - 1;
-            }
-
-            for (i = 0; i < systemLen; ++i)
-            {
-               systemName[i] = line[i];
-            }
-            systemName[systemLen] = '\0';
-
-            strncpy(userName, comma + 1, MAX_LINE_LEN - 1);
-            userName[MAX_LINE_LEN - 1] = '\0';
-
-            trimWhitespace(systemName);
-            trimWhitespace(userName);
-
-            if (strlen(systemName) > 0 && strlen(userName) > 0)
-            {
-               parsedOk = true;
-            }
-         }
-      }
-   }
-
-   return parsedOk;
+    return 0;
 }
