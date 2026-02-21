@@ -27,17 +27,15 @@ UserAccess::~UserAccess()
 
 UserAccess& UserAccess::operator=(const UserAccess& other)
 {
-  if (this == &other)
+  if (this != &other)
   {
-    return *this;
+    delete[] mUser;
+
+    const int len = static_cast<int>(std::strlen(other.mUser));
+    mUser = new char[len + 1];
+    std::strcpy(mUser, other.mUser);
+    mCount = other.mCount;
   }
-
-  delete[] mUser;
-
-  const int len = static_cast<int>(std::strlen(other.mUser));
-  mUser = new char[len + 1];
-  std::strcpy(mUser, other.mUser);
-  mCount = other.mCount;
 
   return *this;
 }

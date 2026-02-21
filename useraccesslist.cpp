@@ -30,43 +30,50 @@ UserAccessList::~UserAccessList()
 
 void UserAccessList::addUser(const char* systemName, const char* user)
 {
-  if (systemName == nullptr || user == nullptr)
+  bool validInput = (systemName != nullptr && user != nullptr);
+  bool matchingSystem = false;
+  bool foundExistingUser = false;
+
+  if (validInput)
   {
-    return;
+    matchingSystem = (std::strcmp(mSystem, systemName) == 0);
   }
 
-  if (std::strcmp(mSystem, systemName) != 0)
+  if (validInput && matchingSystem)
   {
-    return;
-  }
+    ++mTotalAccesses;
 
-  ++mTotalAccesses;
+    UserNode* current = mHead;
+    UserNode* tail = nullptr;
 
-  UserNode* current = mHead;
-  UserNode* tail = nullptr;
-
-  while (current != nullptr)
-  {
-    if (std::strcmp(current->data->getUser(), user) == 0)
+    while (current != nullptr && !foundExistingUser)
     {
-      current->data->incr();
-      return;
+      if (std::strcmp(current->data->getUser(), user) == 0)
+      {
+        current->data->incr();
+        foundExistingUser = true;
+      }
+      else
+      {
+        tail = current;
+        current = current->next;
+      }
     }
 
-    tail = current;
-    current = current->next;
-  }
+    if (!foundExistingUser)
+    {
+      UserAccess* newAccess = new UserAccess(user);
+      UserNode* newNode = new UserNode(newAccess);
 
-  UserAccess* newAccess = new UserAccess(user);
-  UserNode* newNode = new UserNode(newAccess);
-
-  if (mHead == nullptr)
-  {
-    mHead = newNode;
-  }
-  else
-  {
-    tail->next = newNode;
+      if (mHead == nullptr)
+      {
+        mHead = newNode;
+      }
+      else
+      {
+        tail->next = newNode;
+      }
+    }
   }
 }
 
