@@ -10,25 +10,6 @@ using namespace std;
 
 namespace
 {
-string trim(const string& text)
-{
-  size_t start = 0;
-  while (start < text.size() &&
-         isspace(static_cast<unsigned char>(text[start])) != 0)
-  {
-    ++start;
-  }
-
-  size_t end = text.size();
-  while (end > start &&
-         isspace(static_cast<unsigned char>(text[end - 1])) != 0)
-  {
-    --end;
-  }
-
-  return text.substr(start, end - start);
-}
-
 char* copyCString(const string& source)
 {
   char* result = new char[source.size() + 1];
@@ -63,7 +44,22 @@ int main(int argc, char* argv[])
   int systemCount = 0;
   while (getline(systemsFile, line))
   {
-    string system = trim(line);
+    string system = line;
+    size_t start = 0;
+    while (start < system.size() &&
+           isspace(static_cast<unsigned char>(system[start])) != 0)
+    {
+      ++start;
+    }
+
+    size_t end = system.size();
+    while (end > start &&
+           isspace(static_cast<unsigned char>(system[end - 1])) != 0)
+    {
+      --end;
+    }
+
+    system = system.substr(start, end - start);
     if (!system.empty())
     {
       ++systemCount;
@@ -92,7 +88,22 @@ int main(int argc, char* argv[])
   int index = 0;
   while (index < systemCount && getline(systemsFile, line))
   {
-    string system = trim(line);
+    string system = line;
+    size_t start = 0;
+    while (start < system.size() &&
+           isspace(static_cast<unsigned char>(system[start])) != 0)
+    {
+      ++start;
+    }
+
+    size_t end = system.size();
+    while (end > start &&
+           isspace(static_cast<unsigned char>(system[end - 1])) != 0)
+    {
+      --end;
+    }
+
+    system = system.substr(start, end - start);
     if (system.empty())
     {
       continue;
@@ -109,7 +120,22 @@ int main(int argc, char* argv[])
 
   while (getline(accessFile, line))
   {
-    const string entry = trim(line);
+    string entry = line;
+    size_t start = 0;
+    while (start < entry.size() &&
+           isspace(static_cast<unsigned char>(entry[start])) != 0)
+    {
+      ++start;
+    }
+
+    size_t end = entry.size();
+    while (end > start &&
+           isspace(static_cast<unsigned char>(entry[end - 1])) != 0)
+    {
+      --end;
+    }
+
+    entry = entry.substr(start, end - start);
     if (entry.empty())
     {
       continue;
@@ -121,8 +147,39 @@ int main(int argc, char* argv[])
       continue;
     }
 
-    const string system = trim(entry.substr(0, commaPos));
-    const string user = trim(entry.substr(commaPos + 1));
+    string system = entry.substr(0, commaPos);
+    start = 0;
+    while (start < system.size() &&
+           isspace(static_cast<unsigned char>(system[start])) != 0)
+    {
+      ++start;
+    }
+
+    end = system.size();
+    while (end > start &&
+           isspace(static_cast<unsigned char>(system[end - 1])) != 0)
+    {
+      --end;
+    }
+
+    system = system.substr(start, end - start);
+
+    string user = entry.substr(commaPos + 1);
+    start = 0;
+    while (start < user.size() &&
+           isspace(static_cast<unsigned char>(user[start])) != 0)
+    {
+      ++start;
+    }
+
+    end = user.size();
+    while (end > start &&
+           isspace(static_cast<unsigned char>(user[end - 1])) != 0)
+    {
+      --end;
+    }
+
+    user = user.substr(start, end - start);
     if (system.empty() || user.empty())
     {
       continue;
