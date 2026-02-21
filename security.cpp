@@ -1,8 +1,8 @@
 #include <cctype>
+#include <cstring>
 #include <fstream>
 #include <iostream>
 #include <string>
-#include <vector>
 
 #include "useraccesslist.h"
 
@@ -28,6 +28,13 @@ string trim(const string& text)
 
   return text.substr(start, end - start);
 }
+
+char* copyCString(const string& source)
+{
+  char* result = new char[source.size() + 1];
+  strcpy(result, source.c_str());
+  return result;
+}
 }  // namespace
 
 int main(int argc, char* argv[])
@@ -52,26 +59,52 @@ int main(int argc, char* argv[])
     return 1;
   }
 
-  vector<string> systemNames;
   string line;
+  int systemCount = 0;
   while (getline(systemsFile, line))
   {
-    const string system = trim(line);
+    string system = trim(line);
     if (!system.empty())
     {
-      systemNames.push_back(system);
+      ++systemCount;
     }
   }
 
-  if (systemNames.empty())
+  if (systemCount == 0)
   {
     return 0;
   }
 
-  UserAccessList** systems = new UserAccessList*[systemNames.size()];
-  for (size_t i = 0; i < systemNames.size(); ++i)
+  systemsFile.close();
+  systemsFile.open(argv[2]);
+  if (!systemsFile)
   {
-    systems[i] = new UserAccessList(systemNames[i].c_str());
+    cout << "Error: unable to reopen systems file.\n";
+    return 1;
+  }
+
+  char** systemNames = new char*[systemCount];
+  for (int i = 0; i < systemCount; ++i)
+  {
+    systemNames[i] = nullptr;
+  }
+
+  int index = 0;
+  while (index < systemCount && getline(systemsFile, line))
+  {
+    string system = trim(line);
+    if (system.empty())
+    {
+      continue;
+    }
+    systemNames[index] = copyCString(system);
+    ++index;
+  }
+
+  UserAccessList** systems = new UserAccessList*[systemCount];
+  for (int i = 0; i < systemCount; ++i)
+  {
+    systems[i] = new UserAccessList(systemNames[i]);
   }
 
   while (getline(accessFile, line))
@@ -95,22 +128,24 @@ int main(int argc, char* argv[])
       continue;
     }
 
-    for (size_t i = 0; i < systemNames.size(); ++i)
+    for (int i = 0; i < systemCount; ++i)
     {
       systems[i]->addUser(system.c_str(), user.c_str());
     }
   }
 
-  for (size_t i = 0; i < systemNames.size(); ++i)
+  for (int i = 0; i < systemCount; ++i)
   {
     systems[i]->printReport();
   }
 
-  for (size_t i = 0; i < systemNames.size(); ++i)
+  for (int i = 0; i < systemCount; ++i)
   {
     delete systems[i];
+    delete[] systemNames[i];
   }
   delete[] systems;
+  delete[] systemNames;
 
   return 0;
 }
