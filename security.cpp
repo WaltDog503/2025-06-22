@@ -1,77 +1,94 @@
+#include <iostream>
+#include <fstream>
+#include <cstring>
+#include <cstdlib>
 #include "useraccesslist.h"
 
-#include <fstream>
-#include <iostream>
-#include <string>
+using namespace std;
 
-int main(int argc, char** argv)
+#define RDBUFSIZE 100
+
+int main(int argc,char* argv[])
 {
-  int returnCode = 0;
-
-  if (argc != 3)
-  {
-    std::cout << "Usage: ./security accessData systemsData" << '\n';
-    returnCode = 1;
-  }
-  else
-  {
-    std::ifstream accessFile(argv[1]);
-    std::ifstream systemsFile(argv[2]);
-
-    if (!accessFile || !systemsFile)
-    {
-      std::cout << "Error opening input files." << '\n';
-      returnCode = 1;
+    if (argc != 3) {
+	cout << "Usage: " << argv[0] << " <access log file> <systems file>" << endl;
+	return(0);
     }
-    else
+
+    const char* accessDataFile = argv[1];
+    const char* systemsFile = argv[2];
+
+    // This program doesn't assume a specific number of systems or the names
+    // of these systems. Instead, that data is provided in a data file. This
+    // code here reads the list of systems and create an array of
+    // UserAccessList objectsAccessTracker objects -- one per system.
+    //
+    // In order for this to work, you will need to create a class called
+    // "UserAccessList" and make sure that it has a constructor that takes in
+    // a char*.
+    ifstream systemsIn(systemsFile);
+    int numSystems;
+    systemsIn >> numSystems;
+    systemsIn.get();
+    UserAccessList** allLists = new UserAccessList*[numSystems];
+    for (int i=0;i<numSystems;i++)
     {
-      int systemCount = 0;
-      systemsFile >> systemCount;
-      systemsFile.ignore(1000, '\n');
-
-      UserAccessList** systemLists = new UserAccessList*[systemCount];
-
-      for (int i = 0; i < systemCount; ++i)
-      {
-        std::string systemName;
-        std::getline(systemsFile, systemName);
-        systemLists[i] = new UserAccessList(systemName.c_str());
-      }
-
-      int accessCount = 0;
-      accessFile >> accessCount;
-      accessFile.ignore(1000, '\n');
-
-      for (int i = 0; i < accessCount; ++i)
-      {
-        std::string entryLine;
-        std::getline(accessFile, entryLine);
-
-        std::size_t commaPos = entryLine.find(',');
-        if (commaPos != std::string::npos)
-        {
-          std::string systemName = entryLine.substr(0, commaPos);
-          std::string userName = entryLine.substr(commaPos + 2);
-
-          for (int s = 0; s < systemCount; ++s)
-          {
-            systemLists[s]->addUser(systemName.c_str(), userName.c_str());
-          }
-        }
-      }
-
-      for (int i = 0; i < systemCount; ++i)
-      {
-        systemLists[i]->printReport();
-      }
-
-      for (int i = 0; i < systemCount; ++i)
-      {
-        delete systemLists[i];
-      }
-      delete[] systemLists;
+	char sys[RDBUFSIZE];
+	systemsIn.getline(sys,RDBUFSIZE);
+	allLists[i] = new UserAccessList(sys);
     }
-  }
+    systemsIn.close();
 
-  return returnCode;
+    // After reading in the systems, we will now read in all the access logs
+    // and insert these accesses into the UserAccessList that corresponds to
+    // the system being accessed. The first line of the logfile tells us how
+    // many entries are in that logfile. Each line of the logfile contains a
+    // system name and the person accessing it. These two values are separated
+    // by a comma. This code here will read the system name and person name
+    // then it will loop over all the UserAccessLists (in the array created
+    // above) and give each UserAccessList a chance to enter that data. A
+    // UserAccessList will only enter the data if it is the right one. That
+    // is, the system name matches the name in that log entry.
+    ifstream accessDataIn(accessDataFile);
+    int numEntries;
+    accessDataIn >> numEntries;
+    accessDataIn.get();
+    for (int i=0;i<numEntries;i++)
+    {
+	char sys[RDBUFSIZE];
+	char who[RDBUFSIZE];
+
+	accessDataIn.getline(sys,RDBUFSIZE,',');
+	accessDataIn.get(); // eat the extra space
+	accessDataIn.getline(who,RDBUFSIZE);
+
+	for (int j=0;j<numSystems;j++)
+	{
+	    allLists[j]->addUser(sys,who);
+	}
+    }
+    accessDataIn.close();
+
+    // Now that all the data has been read in, it is time to ask each list to
+    // print a report. Make sure to study the example output files to
+    // understand the contents and format of the report.
+    for (int j=0;j<numSystems;j++)
+    {
+	allLists[j]->printReport();
+    }
+
+    // The last step is to clean up memory to avoid memory leaks. We need to
+    // delete each of the UserAccessList objects that were created in the
+    // array above. Calling delete on each object will call that object's
+    // destructor. After all the objects have been deleted, we have to delete
+    // the array itself. Note that your UserAccessList class, which contains a
+    // linked list, will need to have a destructor that cleans up its own
+    // memory.
+    for (int j=0;j<numSystems;j++)
+    {
+	delete allLists[j];
+    }
+    delete [] allLists;
+
+    return 0;
 }
