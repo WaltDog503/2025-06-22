@@ -23,4 +23,4 @@ struct UserNode
    UserNode& operator=(const UserNode& other) = delete;
 };
 
-#endif
+#endif  // USERNODE_H

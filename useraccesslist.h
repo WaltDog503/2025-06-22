@@ -21,4 +21,4 @@ public:
    void printReport();
 };
 
-#endif
+#endif  // USERACCESSLIST_H

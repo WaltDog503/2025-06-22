@@ -19,4 +19,4 @@ public:
    void incr();
 };
 
-#endif
+#endif  // USERACCESS_H
