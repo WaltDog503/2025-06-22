@@ -34,7 +34,7 @@ UserAccess::~UserAccess()
   delete[] mUser;
 }
 
-UserAccess& UserAccess::operator=(const UserAccess& other)
+UserAccess UserAccess::operator=(const UserAccess& other)
 {
   if (this == &other)
   {
@@ -48,12 +48,12 @@ UserAccess& UserAccess::operator=(const UserAccess& other)
   return *this;
 }
 
-const char* UserAccess::getUser() const
+const char* UserAccess::getUser()
 {
   return mUser;
 }
 
-int UserAccess::getCount() const
+int UserAccess::getCount()
 {
   return mCount;
 }

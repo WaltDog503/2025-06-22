@@ -77,7 +77,7 @@ void UserAccessList::addUser(const char* systemName, const char* user)
   }
 }
 
-void UserAccessList::printReport() const
+void UserAccessList::printReport()
 {
   std::cout << "System: " << mSystem << '\n';
 

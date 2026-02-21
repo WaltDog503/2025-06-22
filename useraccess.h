@@ -8,10 +8,10 @@ public:
   UserAccess(const UserAccess& other);
   ~UserAccess();
 
-  UserAccess& operator=(const UserAccess& other);
+  UserAccess operator=(const UserAccess& other);
 
-  const char* getUser() const;
-  int getCount() const;
+  const char* getUser();
+  int getCount();
   void incr();
 
 private:

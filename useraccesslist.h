@@ -13,7 +13,7 @@ public:
   UserAccessList& operator=(const UserAccessList& other) = delete;
 
   void addUser(const char* systemName, const char* user);
-  void printReport() const;
+  void printReport();
 
 private:
   char* mSystem;
