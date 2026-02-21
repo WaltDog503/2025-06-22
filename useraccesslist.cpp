@@ -3,13 +3,15 @@
 #include <cstring>
 #include <iostream>
 
+using namespace std;
+
 UserAccessList::UserAccessList(const char* systemName)
 {
   const char* source = (systemName == nullptr) ? "" : systemName;
-  const int len = static_cast<int>(std::strlen(source));
+  const int len = static_cast<int>(strlen(source));
 
   mSystem = new char[len + 1];
-  std::strcpy(mSystem, source);
+  strcpy(mSystem, source);
 
   mTotalAccesses = 0;
   mHead = nullptr;
@@ -36,7 +38,7 @@ void UserAccessList::addUser(const char* systemName, const char* user)
 
   if (validInput)
   {
-    matchingSystem = (std::strcmp(mSystem, systemName) == 0);
+    matchingSystem = (strcmp(mSystem, systemName) == 0);
   }
 
   if (validInput && matchingSystem)
@@ -48,7 +50,7 @@ void UserAccessList::addUser(const char* systemName, const char* user)
 
     while (current != nullptr && !foundExistingUser)
     {
-      if (std::strcmp(current->data->getUser(), user) == 0)
+      if (strcmp(current->data->getUser(), user) == 0)
       {
         current->data->incr();
         foundExistingUser = true;
@@ -99,10 +101,10 @@ void UserAccessList::printReport()
     }
   }
 
-  std::cout << "System: " << mSystem << '\n';
-  std::cout << "  Top: " << (topNode != nullptr ? topNode->data->getUser() : "") << '\n';
+  cout << "System: " << mSystem << '\n';
+  cout << "  Top: " << (topNode != nullptr ? topNode->data->getUser() : "") << '\n';
 
-  std::cout << "  Second: ";
+  cout << "  Second: ";
   bool printedSecond = false;
   if (secondCount >= 0)
   {
@@ -112,23 +114,23 @@ void UserAccessList::printReport()
       {
         if (printedSecond)
         {
-          std::cout << ", ";
+          cout << ", ";
         }
-        std::cout << current->data->getUser();
+        cout << current->data->getUser();
         printedSecond = true;
       }
     }
   }
-  std::cout << '\n';
+  cout << '\n';
 
-  std::cout << "  All:" << '\n';
+  cout << "  All:" << '\n';
 
   for (UserNode* current = mHead; current != nullptr; current = current->next)
   {
     const int count = current->data->getCount();
     const int percent = (mTotalAccesses == 0) ? 0 : (count * 100 / mTotalAccesses);
 
-    std::cout << "    " << current->data->getUser() << " " << count << " (" << percent
-              << "%)" << '\n';
+    cout << "    " << current->data->getUser() << " " << count << " (" << percent
+         << "%)" << '\n';
   }
 }

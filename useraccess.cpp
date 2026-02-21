@@ -2,21 +2,23 @@
 
 #include <cstring>
 
+using namespace std;
+
 UserAccess::UserAccess(const char* user)
 {
   const char* source = (user == nullptr) ? "" : user;
-  const int len = static_cast<int>(std::strlen(source));
+  const int len = static_cast<int>(strlen(source));
 
   mUser = new char[len + 1];
-  std::strcpy(mUser, source);
+  strcpy(mUser, source);
   mCount = 1;
 }
 
 UserAccess::UserAccess(const UserAccess& other)
 {
-  const int len = static_cast<int>(std::strlen(other.mUser));
+  const int len = static_cast<int>(strlen(other.mUser));
   mUser = new char[len + 1];
-  std::strcpy(mUser, other.mUser);
+  strcpy(mUser, other.mUser);
   mCount = other.mCount;
 }
 
@@ -31,9 +33,9 @@ UserAccess& UserAccess::operator=(const UserAccess& other)
   {
     delete[] mUser;
 
-    const int len = static_cast<int>(std::strlen(other.mUser));
+    const int len = static_cast<int>(strlen(other.mUser));
     mUser = new char[len + 1];
-    std::strcpy(mUser, other.mUser);
+    strcpy(mUser, other.mUser);
     mCount = other.mCount;
   }
 
