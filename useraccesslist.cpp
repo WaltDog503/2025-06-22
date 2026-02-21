@@ -208,5 +208,4 @@ void UserAccessList::printReport()
            << " (" << percent << "%)\n";
       curr = curr->next;
    }
-   cout << '\n';
 }
