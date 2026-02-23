@@ -1,5 +1,5 @@
-# CS162: Computer Science II  
-## Algorithm Design Document  
+# CS162: Computer Science II
+## Algorithm Design Document
 ### Programming Project: Security
 
 ---
@@ -23,9 +23,14 @@ Required completion levels:
 
 ## 2. Program Description
 
-This program reads two input files: one file containing ship system names and one file containing access log records. It tracks how many times each user accessed each system by storing one linked list per system, where each node contains a user name and that user’s access count for that system.
+This program reads a systems file and an access log file to track how often
+each user accesses each ship system. The first line of each file contains a
+count, and then the program reads exactly that many records.
 
-After all access log entries are processed, the program prints a report for each system. Each report shows the top accessor, the second accessor, and all users with their counts and percentage of total accesses for that system.
+The program creates a dynamic array of `UserAccessList` objects (one list per
+system). Each list is a linked list of `UserAccess` entries that store
+`user,count` data, and each list prints a formatted report with Top, Second,
+and All user access totals and percentages.
 
 ---
 
@@ -37,149 +42,123 @@ After all access log entries are processed, the program prints a report for each
 |---|---|---|
 | `argc` | integer | Number of command-line arguments. |
 | `argv` | array of C-strings (`char*[]`) | Command-line argument values. |
-| `argv[1]` | C-string (`char*`) | Access log filename provided by user. |
-| `argv[2]` | C-string (`char*`) | Systems filename provided by user. |
-| `accessFile` | input file stream | Stream used to read access records. |
-| `systemsFile` | input file stream | Stream used to read system names. |
-| `line` | string | Current line being read from file. |
-| `system` | string | Parsed system name from a record. |
-| `user` | string | Parsed user name from a record. |
-| `commaPos` | integer (`size_t`) | Position of comma separator in access line. |
-| `systemCount` | integer | Number of non-empty systems in systems file. |
+| `accessDataFile` | C-string (`const char*`) | Access log filename (`argv[1]`). |
+| `systemsFile` | C-string (`const char*`) | Systems filename (`argv[2]`). |
+| `systemsIn` | input file stream | Input stream for systems file. |
+| `accessDataIn` | input file stream | Input stream for access file. |
+| `numSystems` | integer | Number of systems (first line of systems file). |
+| `numEntries` | integer | Number of access records (first line of access file). |
+| `sys` | character array (`char[RDBUFSIZE]`) | System name buffer while reading lines. |
+| `who` | character array (`char[RDBUFSIZE]`) | User name buffer while reading lines. |
 
 **Input data structures**
-- `systemNames`: dynamic array of C-strings (`char**`)
-- `systems`: dynamic array of `UserAccessList*`
+- `allLists`: dynamic array of `UserAccessList*`, size `numSystems`
+- Each `UserAccessList` contains a linked list of `UserNode`
 
 ### 3b. Output Variables
 
 | Variable Name | Data Type | Description |
 |---|---|---|
-| Console report lines | string output | Formatted report output for each system. |
-| `mSystem` | dynamic C-string (`char*`) | System name shown in report. |
-| `topUser` | C-string (`const char*`) | User with the highest count. |
+| Console report lines | text output | Formatted report for each system. |
+| `mSystem` | dynamic C-string (`char*`) | System name stored in each `UserAccessList`. |
+| `topUser` | C-string (`const char*`) | User with highest count for one system. |
 | `secondUser` | C-string (`const char*`) | User with second-highest count. |
-| `count` | integer | Number of accesses for a user. |
-| `percent` | integer | Percentage of total system accesses by user. |
+| `count` | integer | Access count for a user. |
+| `percent` | integer | Percent of system accesses by user. |
 
 ### 3c. Calculations
 
-1. **System count**
-   - `systemCount = number of non-empty lines in systems file`
+1. **Total accesses per system**
+   - When a log record matches a list's system:
+   - `mTotalAccesses = mTotalAccesses + 1`
 
-2. **Total accesses for a system**
-   - When an access record belongs to a system list:  
-     `mTotalAccesses = mTotalAccesses + 1`
+2. **Per-user count**
+   - If user already exists in linked list:
+   - `userCount = userCount + 1`
+   - Otherwise create a new `UserAccess` node with initial count of `1`
 
-3. **Per-user count**
-   - If user is already in linked list:  
-     `userCount = userCount + 1`
-   - Otherwise, create a new user entry with count `1`.
+3. **Percentage in report**
+   - `percent = (count * 100) / mTotalAccesses`
+   - Integer division is used (truncated percent)
 
-4. **Percentage for report output**
-   - `percent = (count * 100) / mTotalAccesses`  
-   (integer division; truncated percentage)
-
-5. **Top and second top accessors**
-   - Traverse the linked list and compare counts to track largest and second largest values.
+4. **Top and Second users**
+   - Traverse linked list and track highest and second-highest counts
 
 ### 3d. Logic (Pseudocode)
 
 ```text
 MAIN
-  if argc is not 3
+  if argc != 3
     print usage message
-    stop
+    return
 
-  open access file using argv[1]
-  if open fails
-    print error
-    stop
+  accessDataFile = argv[1]
+  systemsFile = argv[2]
 
-  open systems file using argv[2]
-  if open fails
-    print error
-    stop
+  open systems file
+  read numSystems
+  ignore newline
 
-  systemCount = 0
-  for each line in systems file
-    remove leading/trailing whitespace
-    if line is not empty
-      systemCount++
+  allocate allLists as dynamic array of UserAccessList* with numSystems
+  loop i from 0 to numSystems - 1
+    read one system line into sys
+    allLists[i] = new UserAccessList(sys)
+  close systems file
 
-  if systemCount is 0
-    stop
+  open access file
+  read numEntries
+  ignore newline
 
-  reopen systems file
+  loop i from 0 to numEntries - 1
+    read system text into sys up to comma
+    consume one space after comma
+    read remaining user text into who
 
-  allocate dynamic array systemNames of size systemCount
-  read systems file again
-    for each non-empty system line
-      allocate C-string copy of system name
-      store in systemNames array
+    loop j from 0 to numSystems - 1
+      allLists[j]->addUser(sys, who)
+  close access file
 
-  allocate dynamic array systems of size systemCount
-  for i = 0 to systemCount - 1
-    systems[i] = new UserAccessList(systemNames[i])
+  loop j from 0 to numSystems - 1
+    allLists[j]->printReport()
 
-  for each line in access file
-    remove leading/trailing whitespace
-    if line is empty, continue
-    find comma
-    if comma missing, continue
-
-    parse left side as system
-    parse right side as user
-    trim both parsed values
-    if either is empty, continue
-
-    for i = 0 to systemCount - 1
-      systems[i]->addUser(system, user)
-
-  for i = 0 to systemCount - 1
-    systems[i]->printReport()
-
-  for i = 0 to systemCount - 1
-    delete systems[i]
-    delete[] systemNames[i]
-
-  delete[] systems
-  delete[] systemNames
+  loop j from 0 to numSystems - 1
+    delete allLists[j]
+  delete[] allLists
 END MAIN
 ```
 
 ```text
 UserAccessList::addUser(systemName, user)
-  if systemName does not match mSystem
-    return
+  if systemName does not match this list's mSystem
+    do nothing
+  else
+    mTotalAccesses++
 
-  mTotalAccesses++
-
-  traverse linked list from mHead
-    if current node user matches user
-      increment count
-      return
-
-  create new UserAccess for user
-  create new UserNode with that UserAccess
-  append node to end of linked list
+    search linked list for user
+    if found
+      increment existing count
+    else
+      create new UserAccess(user)
+      create new UserNode(pointer to new UserAccess)
+      append node at end of linked list
 ```
 
 ```text
 UserAccessList::printReport()
-  print system header
+  print "System: <name>"
 
-  traverse linked list to determine top and second users
-  print top and second names (or "(none)")
+  traverse list once to determine top and second users by count
+  print Top and Second lines
 
-  print all user entries in list order:
-    percent = (count * 100) / mTotalAccesses
-    print user name, count, and percent
+  print "All:"
+  traverse list again
+    compute percent = (count * 100) / mTotalAccesses
+    print "user count (percent%)"
 ```
 
 ---
 
 ## 4. Notes
 
-- This document should be exported as PDF and submitted with project files.
-- Include screenshots before final export.
+- Export this document as PDF and submit with project files.
+- Insert screenshots before final export.
