@@ -1,0 +1,78 @@
+Script started on 2026-03-02 06:51:19+00:00 [COMMAND="printf "egg\nrice\n2.39\n2022/05/12\n" | ./main; printf "\n"; printf "pasta\ndonut\n4.59\n2024/04/23\n" | ./main; printf "\n"; printf "milk\navocado\n4.20\n2026/12/01\n" | ./main" <not executed on terminal>]
+Current Inventory:
+apple	0.99	Sun 2022-03-20
+banana	0.69	Wed 2021-04-28
+cookie	0.50	Sun 2023-02-12
+donut	1.00	Thu 2021-10-28
+egg	3.88	Sun 2022-01-30
+fish	5.88	Mon 2021-02-15
+milk	2.99	Tue 2021-03-02
+yogurt	6.38	Sun 2021-06-13
+
+Enter the item name to find: Item found!
+egg	3.88	Sun 2022-01-30
+
+To insert an item.
+Enter name of item: Enter price of item: Enter expiry date of item: 
+Item inserted. Updated list below:
+apple	0.99	Sun 2022-03-20
+banana	0.69	Wed 2021-04-28
+cookie	0.50	Sun 2023-02-12
+donut	1.00	Thu 2021-10-28
+egg	3.88	Sun 2022-01-30
+fish	5.88	Mon 2021-02-15
+milk	2.99	Tue 2021-03-02
+rice	2.39	Thu 2022-05-12
+yogurt	6.38	Sun 2021-06-13
+
+Current Inventory:
+apple	0.99	Sun 2022-03-20
+banana	0.69	Wed 2021-04-28
+cookie	0.50	Sun 2023-02-12
+donut	1.00	Thu 2021-10-28
+egg	3.88	Sun 2022-01-30
+fish	5.88	Mon 2021-02-15
+milk	2.99	Tue 2021-03-02
+yogurt	6.38	Sun 2021-06-13
+
+Enter the item name to find: Item not found!
+
+To insert an item.
+Enter name of item: Enter price of item: Enter expiry date of item: 
+Item exists. List not updated:
+apple	0.99	Sun 2022-03-20
+banana	0.69	Wed 2021-04-28
+cookie	0.50	Sun 2023-02-12
+donut	1.00	Thu 2021-10-28
+egg	3.88	Sun 2022-01-30
+fish	5.88	Mon 2021-02-15
+milk	2.99	Tue 2021-03-02
+yogurt	6.38	Sun 2021-06-13
+
+Current Inventory:
+apple	0.99	Sun 2022-03-20
+banana	0.69	Wed 2021-04-28
+cookie	0.50	Sun 2023-02-12
+donut	1.00	Thu 2021-10-28
+egg	3.88	Sun 2022-01-30
+fish	5.88	Mon 2021-02-15
+milk	2.99	Tue 2021-03-02
+yogurt	6.38	Sun 2021-06-13
+
+Enter the item name to find: Item found!
+milk	2.99	Tue 2021-03-02
+
+To insert an item.
+Enter name of item: Enter price of item: Enter expiry date of item: 
+Item inserted. Updated list below:
+apple	0.99	Sun 2022-03-20
+avocado	4.20	Tue 2026-12-01
+banana	0.69	Wed 2021-04-28
+cookie	0.50	Sun 2023-02-12
+donut	1.00	Thu 2021-10-28
+egg	3.88	Sun 2022-01-30
+fish	5.88	Mon 2021-02-15
+milk	2.99	Tue 2021-03-02
+yogurt	6.38	Sun 2021-06-13
+
+Script done on 2026-03-02 06:51:19+00:00 [COMMAND_EXIT_CODE="0"]

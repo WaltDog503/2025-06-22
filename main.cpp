@@ -1,77 +1,71 @@
-// ------------- FILE HEADER -------------
-// Author: 
-// Assignment:
-// Date:
-// Description:
-// Sources: 
+#include "main.h"
 
+int main(int argc, char** argv)
+{
+	ItemList	inventory;
+	char		fileName[] = "items.txt";
 
-// ------------- ZYBOOKS SCORES -------------
-// https://learn.zybooks.com/zybook/PCCCS161ASummer25
-// Chapter: 
-// Participation: 
-// Challenge:
-// Labs:
+	// open file to read data and populate inventory
+	ifstream in;
+	in.open(fileName);
+	if (!in)
+	{
+		cerr << "Fail to open " << fileName << " for input!" << endl;
+		return 1;
+	}
+	inventory.readList(in);
+	in.close();
 
+	cout << "Current Inventory:" << endl;
+	inventory.printList();
 
-// ------------- DISCORD POSTS -------------
-// https://discord.com/invite/URYKKf8YHm
-// Count:
-// Links (Optional): 
+	InventoryItem match;
+	char findName[MAX_CHAR];
+	cout << endl << "Enter the item name to find: ";
+	cin.getline(findName, MAX_CHAR);
 
+	if (inventory.searchByName(findName, match))
+	{
+		cout << "Item found!" << endl;
+		match.print();
+	}
+	else
+	{
+		cout << "Item not found!" << endl;
+	}
 
-// ------------- DESIGN DOCUMENT -------------
-// A. INPUT [yes/no]: 
-// B. OUTPUT [yes/no]:
-// C. CALCULATIONS [yes/no]:
-// D. LOGIC and ALGORITHMS [yes/no]:
-//    (Optional) flow chart link or file name: 
+	cout << endl << "To insert an item." << endl;
+	char itemName[MAX_CHAR];
+	float itemPrice;
+	int year;
+	int month;
+	int day;
+	char slash;
 
+	cout << "Enter name of item: ";
+	cin.getline(itemName, MAX_CHAR);
+	cout << "Enter price of item: ";
+	cin >> itemPrice;
+	cout << "Enter expiry date of item: ";
+	cin >> year >> slash >> month >> slash >> day;
 
-// ------------- TESTING -------------
-// PASS ALL GIVEN SAMPLE RUN TESTS [yes/no]: 
-// (Optional) Additional tests count:   
+	InventoryItem newItem;
+	Date expDate;
+	expDate.setDate(year, month, day);
+	newItem.setItemName(itemName);
+	newItem.setItemPrice(itemPrice);
+	newItem.setExpDate(expDate);
 
+	cout << endl;
+	if (inventory.insertItem(newItem))
+	{
+		cout << "Item inserted. Updated list below:" << endl;
+	}
+	else
+	{
+		cout << "Item exists. List not updated:" << endl;
+	}
+	inventory.printList();
 
-// ------------- CODE -------------
-#include <iostream>
-
-using namespace std;
-
-int main() {
-  cout << "Hello, World!" << endl;
-  return 0;
+	return 0;
 }
-
-
-
-
-// ------------- DESIGN -------------
-/* 
-Program Name:
-
-Program Description:
-
-Design:
-A. INPUT
-Define the input variables including name data type. 
-
-B. OUTPUT
-Define the output variables including data types. 
-
-C. CALCULATIONS
-Describe calculations used by algorithms in step D.  
-List all formulas. 
-If there are no calculations needed, state there are no calculations.
-
-D. LOGIC and ALGORITHMS
-Design the logic of your program using pseudocode or flowcharts. 
-Use conditionals, loops, functions or array constructs.
-List the steps in transforming inputs into outputs. 
-https://github.com/Glen-Sasek-PCC-Instructor/2025-06-22/blob/main/Pseudocode-Reference.txt
-
-
-SAMPLE RUNS
-Copy from assignment document.
-
-*/
